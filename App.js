@@ -15,6 +15,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path')
 const cloudinary = require('cloudinary').v2;
 // const corsOptions=require("./utility/corsOptions")
+//new one
 const cors=require("cors")
 const morgan = require("morgan");
 const PostModel = require('./models/post');
