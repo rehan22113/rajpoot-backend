@@ -63,13 +63,13 @@ const Login =async(req,res)=>{
 
     } catch (error) {
         console.log("Error in Login Controller",error)
-        res.status(400).json("Error in Login Controller")
+        res.status(500).json("Error in Login Controller")
      }
 }
 
 const RefreshUser = async(req,res)=>{
     let userData = req.user
-    res.json({msg:"user is authorized",userData})
+    res.status(200).json({msg:"user is authorized",userData})
 
 }
 
