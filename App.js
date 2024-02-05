@@ -10,6 +10,7 @@ const adminApi = require('./Routes/Admin');
 const categoryApi = require('./Routes/Category');
 const industryApi = require('./Routes/Industry');
 const principalApi = require('./Routes/Principal');
+const clientApi = require('./Routes/Clients')
 const postApi = require('./Routes/Post')
 const cookieParser = require('cookie-parser');
 const path = require('path')
@@ -76,6 +77,7 @@ app.use('/api/v1/industry', industryApi);
 app.use('/api/v1/category',categoryApi);
 app.use('/api/v1/principal',principalApi);
 app.use('/api/v1/post',postApi);
+app.use('/api/v1/client',clientApi);
 
 // testing endpoint
 app.get('/api/v1',function (req,res){  
