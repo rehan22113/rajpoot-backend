@@ -154,13 +154,16 @@ const ViewPostByPrincipal = async(req,res)=>{
 const AddNewPost = async(req,res)=>{
     
     try{
-        const imageFile = req.file.path;
+        const imageFile = req.files;
+        const AllPaths = imageFile.map((item)=>item.path)
+        // console.log(AllPaths)
         const {title,content,category,industry,principal,weburl,isFeatured,status,tags,fb,tw,insta} = req.body;
         const cat= JSON.parse(category)
+        // const filesPath = JSON.parse(AllPaths)
         // console.log(cat)
      const data = new PostModel(
         {
-        fImage:imageFile,
+        fImage:AllPaths,
         title,
         content,
         weburl,
@@ -206,12 +209,14 @@ const DeletePost=async(req,res)=>{
 
 const UpdatePost=async(req,res)=>{
     try{
-        const imageFile = req.file.path;
+        const imageFile = req.files;
+        console.log(req.files)
+        const AllPaths = imageFile.map((item)=>item.path)
         const {title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor} = req.body;
 
         const id = req.params['id'];
         if(imageFile){
-            const response = await PostModel.findOneAndUpdate({_id:id},{$set:{title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor,fImage:imageFile}});
+            const response = await PostModel.findOneAndUpdate({_id:id},{$set:{title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor,fImage:AllPaths}});
             res.status(201).json({msg:"Post Updated with featured image",res:response})
         }else{
                 const response = await PostModel.findOneAndUpdate({_id:id},{$set:{title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor}});

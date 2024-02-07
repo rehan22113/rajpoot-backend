@@ -21,10 +21,7 @@ const PostSchema=mongoose.Schema({
         ref:'industrie',
         required:true,
     },
-    fImage:{
-      type: String,
-      required:false  
-    },
+    fImage:[String],
     title:{
         type:String,
         required:true

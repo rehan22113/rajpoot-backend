@@ -31,7 +31,7 @@ const storage = new CloudinaryStorage({
     }
 })
 
-const upload = multer({ storage: storage })
+const upload = multer({ storage: storage,limits: { fileSize: 1024 * 1024 * 5 } })
 
 
 
@@ -52,9 +52,9 @@ Route.get("/limited",ViewLimitedPost)
 Route.get("/category/:category",ViewPostByCategory)
 Route.get("/industry/:category",ViewPostByIndustry)
 Route.get("/principal/:category",ViewPostByPrincipal)
-Route.post("/",[upload.single("fImage")],AddNewPost);
+Route.post("/",[VerifyAdmin,upload.array('fImage', 5)],AddNewPost);
 
-Route.patch("/:id",[VerifyAdmin,upload.single("fImage")],UpdatePost)
+Route.patch("/:id",[VerifyAdmin,upload.array('fImage', 5)],UpdatePost)
 Route.delete("/:id",DeletePost)
 Route.post("/contentimage",[VerifyAdmin,upload.single("fImage")],UploadImage)
 
