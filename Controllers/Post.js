@@ -159,6 +159,8 @@ const AddNewPost = async(req,res)=>{
         // console.log(AllPaths)
         const {title,content,category,industry,principal,weburl,isFeatured,status,tags,fb,tw,insta} = req.body;
         const cat= JSON.parse(category)
+        const ind= JSON.parse(industry)
+
         // const filesPath = JSON.parse(AllPaths)
         // console.log(cat)
      const data = new PostModel(
@@ -168,7 +170,7 @@ const AddNewPost = async(req,res)=>{
         content,
         weburl,
         category:cat,
-        industry,
+        industry:ind,
         principal,
         tags,
         fb,

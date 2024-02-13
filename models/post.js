@@ -16,11 +16,12 @@ const PostSchema=mongoose.Schema({
         ref:'principal',
         required:true,
     },
-    industry:{
+    industry:[{
         type: mongoose.Schema.Types.ObjectId,
         ref:'industrie',
         required:true,
-    },
+    }
+    ],
     fImage:[String],
     title:{
         type:String,
