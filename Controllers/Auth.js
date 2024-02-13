@@ -49,15 +49,15 @@ const Login =async(req,res)=>{
             }
             
         else{     
-            res.status(400).json({msg:"cookie not created"})
+            res.status(403).json({msg:"cookie not created"})
         }
       }
       else{
-        res.status(404).json({msg:"Login Failed"})
+        res.status(401).json({msg:"Login Failed"})
     }       
     }
     else{
-        res.status(404).json({msg:"Login Failed"})
+        res.status(401).json({msg:"Login Failed"})
 
     }
 
