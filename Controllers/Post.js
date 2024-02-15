@@ -214,14 +214,40 @@ const UpdatePost=async(req,res)=>{
         const imageFile = req.files;
         console.log(req.files)
         const AllPaths = imageFile.map((item)=>item.path)
-        const {title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor} = req.body;
+        const { title,content,weburl,category,industry,principal,tags,fb,tw,insta,isFeatured,status} = req.body;
+        const cat= JSON.parse(category)
+        const ind= JSON.parse(industry)
 
         const id = req.params['id'];
-        if(imageFile){
-            const response = await PostModel.findOneAndUpdate({_id:id},{$set:{title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor,fImage:AllPaths}});
+        if(AllPaths.length>0){
+            const response = await PostModel.findOneAndUpdate({_id:id},{$set:{   fImage:AllPaths,
+            title,
+            content,
+            weburl,
+            category:cat,
+            industry:ind,
+            principal,
+            tags,
+            fb,
+            tw,
+            insta,
+            isFeatured,
+            status
+            }});
             res.status(201).json({msg:"Post Updated with featured image",res:response})
         }else{
-                const response = await PostModel.findOneAndUpdate({_id:id},{$set:{title,content,category,isFeatured,status,metaTitle,metaDescription,metaAuthor}});
+                const response = await PostModel.findOneAndUpdate({_id:id},{$set:{   title,
+                    content,
+                    weburl,
+                    category:cat,
+                    industry:ind,
+                    principal,
+                    tags,
+                    fb,
+                    tw,
+                    insta,
+                    isFeatured,
+                    status}});
                 res.status(201).json({msg:"Post Updated without featured image",res:response})
         }
 
