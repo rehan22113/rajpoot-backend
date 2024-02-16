@@ -212,8 +212,7 @@ const DeletePost=async(req,res)=>{
 const UpdatePost=async(req,res)=>{
     try{
         const imageFile = req.files;
-        console.log(req.files)
-        const AllPaths = imageFile.map((item)=>item.path)
+        const AllPaths = imageFile?imageFile.map((item)=>item.path):[]
         const { title,content,weburl,category,industry,principal,tags,fb,tw,insta,isFeatured,status} = req.body;
         const cat= JSON.parse(category)
         const ind= JSON.parse(industry)

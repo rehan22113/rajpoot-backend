@@ -1,7 +1,7 @@
 const express = require('express')
 const {VerifyAdmin} = require('../../Middleware/AdminAuth')
 const Route = express.Router();
-const { ViewIndustry, AddNewIndustry, UpdateIndustry, DeleteIndustry } = require('../../Controllers/Industry');
+const { ViewIndustry, AddNewIndustry, UpdateIndustry, DeleteIndustry, ViewSingleIndustry } = require('../../Controllers/Industry');
 const multer = require("multer")
 const path = require('path');
 const { UploadImage } = require('../../Controllers/Post');
@@ -48,6 +48,7 @@ const upload = multer({ storage: storage })
 // Route.route("/:id").patch([VerifyAdmin,upload.single("fImage")],UpdateIndustryViewIndustry).delete([VerifyAdmin],DeleteIndustryViewIndustry)
 
 Route.get("/",ViewIndustry)
+Route.get("/:id",ViewSingleIndustry)
 Route.post("/",[upload.single("fImage")],AddNewIndustry);
 
 Route.patch("/:id",[VerifyAdmin,upload.single("fImage")],UpdateIndustry)

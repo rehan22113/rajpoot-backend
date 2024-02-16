@@ -21,6 +21,22 @@ const ViewIndustry = async(req,res)=>{
     }
 }
 
+const ViewSingleIndustry = async(req,res)=>{
+
+    try{
+        let response;
+        const {id} = req.params
+        response = await  IndustryModel.findOne({_id:id})
+        if(response)
+        res.status(200).json({msg:"Data Send",data:response})
+        else
+        res.status(404).json({msg:"data not found"})
+    }catch(err){
+        console.log("View industry have an issue",err)
+        res.status(500).json({msg:'Got error to find category'})
+    }
+}
+
 const AddNewIndustry = async(req,res)=>{
     try{
         const imageFile = req.file.path;
@@ -59,18 +75,23 @@ try{
 const UpdateIndustry= async(req,res)=>{
     try{
 
-        const imageFile = req.file.path;
-        const {name,color} = req.body;
+        const imageFile = req.file?.path;
+        const {name,featured} = req.body;
+        console.log(req.body)
         const id = req.params['id'];
-        
-        const response = await IndustryModel.findOneAndUpdate({_id:id},{$set:{name,color,image:imageFile}});
-        res.status(201).json({msg:"Industry Updated"})
-
+        if(imageFile){
+            const response = await IndustryModel.findOneAndUpdate({_id:id},{$set:{name,featured,image:imageFile}});
+            res.status(201).json({msg:"industry Updated with image"})
+        }
+        else{
+            const response = await IndustryModel.findOneAndUpdate({_id:id},{$set:{name,featured}});
+            res.status(201).json({msg:"industry Updated without image"})
+        }
     }catch(err){
-        console.log("error in upate Industry",err)
+        console.log("error in upate industry",err)
         res.status(400).json({msg:"Error in Updation"})
     }   
 }
 
 
-module.exports = {ViewIndustry,AddNewIndustry,DeleteIndustry,UpdateIndustry}
+module.exports = {ViewIndustry, ViewSingleIndustry,AddNewIndustry,DeleteIndustry,UpdateIndustry}
