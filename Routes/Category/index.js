@@ -1,7 +1,7 @@
 const express = require('express')
 const {VerifyAdmin} = require('../../Middleware/AdminAuth')
 const Route = express.Router();
-const { ViewCategories, AddNewCategories, UpdateCategories, DeleteCategories } = require('../../Controllers/Category');
+const { ViewCategories, AddNewCategories, UpdateCategories, DeleteCategories, ViewSingleCategory } = require('../../Controllers/Category');
 const multer = require("multer")
 const path = require('path');
 const { UploadImage } = require('../../Controllers/Post');
@@ -48,6 +48,7 @@ const upload = multer({ storage: storage })
 // Route.route("/:id").patch([VerifyAdmin,upload.single("fImage")],UpdateCategoriesViewCategories).delete([VerifyAdmin],DeleteCategoriesViewCategories)
 
 Route.get("/",ViewCategories)
+Route.get("/:id",ViewSingleCategory)
 Route.post("/",[upload.single("fImage")],AddNewCategories);
 
 Route.patch("/:id",[VerifyAdmin,upload.single("fImage")],UpdateCategories)

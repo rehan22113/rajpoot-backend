@@ -20,7 +20,21 @@ const ViewCategories = async(req,res)=>{
         res.status(400).json({msg:'Got error to find category'})
     }
 }
+const ViewSingleCategory = async(req,res)=>{
 
+    try{
+        let response;
+        const {id} = req.params
+        response = await  CategoryModel.findOne({_id:id})
+        if(response)
+        res.status(200).json({msg:"Data Send",data:response})
+        else
+        res.status(404).json({msg:"data not found"})
+    }catch(err){
+        console.log("View Categories issue",err)
+        res.status(500).json({msg:'Got error to find category'})
+    }
+}
 const AddNewCategories = async(req,res)=>{
     try{
         const imageFile = req.file.path;
@@ -58,13 +72,18 @@ try{
 const UpdateCategories= async(req,res)=>{
     try{
 
-        const imageFile = req.file.path;
-        const {name,color} = req.body;
+        const imageFile = req.file?.path;
+        const {name,featured,parent} = req.body;
+        console.log(req.body)
         const id = req.params['id'];
-        
-        const response = await CategoryModel.findOneAndUpdate({_id:id},{$set:{name,color,image:imageFile}});
-        res.status(201).json({msg:"Category Updated"})
-
+        if(imageFile){
+            const response = await CategoryModel.findOneAndUpdate({_id:id},{$set:{name,featured,parent,image:imageFile}});
+            res.status(201).json({msg:"Category Updated with image"})
+        }
+        else{
+            const response = await CategoryModel.findOneAndUpdate({_id:id},{$set:{name,featured,parent}});
+            res.status(201).json({msg:"Category Updated without image"})
+        }
     }catch(err){
         console.log("error in upate categories",err)
         res.status(400).json({msg:"Error in Updation"})
@@ -72,4 +91,4 @@ const UpdateCategories= async(req,res)=>{
 }
 
 
-module.exports = {ViewCategories,AddNewCategories,DeleteCategories,UpdateCategories}
+module.exports = {ViewCategories, ViewSingleCategory,AddNewCategories,DeleteCategories,UpdateCategories}

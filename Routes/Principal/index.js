@@ -1,7 +1,7 @@
 const express = require('express')
 const {VerifyAdmin} = require('../../Middleware/AdminAuth')
 const Route = express.Router();
-const { ViewPrincipal, AddNewPrincipal, UpdatePrincipal, DeletePrincipal } = require('../../Controllers/Principal');
+const { ViewPrincipal, AddNewPrincipal, UpdatePrincipal, DeletePrincipal, ViewSinglePrincipal } = require('../../Controllers/Principal');
 const multer = require("multer")
 const path = require('path');
 const { UploadImage } = require('../../Controllers/Post');
@@ -48,6 +48,7 @@ const upload = multer({ storage: storage })
 // Route.route("/:id").patch([VerifyAdmin,upload.single("fImage")],UpdatePrincipalViewPrincipal).delete([VerifyAdmin],DeletePrincipalViewPrincipal)
 
 Route.get("/",ViewPrincipal)
+Route.get("/:id",ViewSinglePrincipal)
 Route.post("/",[upload.single("fImage")],AddNewPrincipal);
 
 Route.patch("/:id",[VerifyAdmin,upload.single("fImage")],UpdatePrincipal)
