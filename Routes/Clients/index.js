@@ -1,7 +1,7 @@
 const express = require('express')
 const {VerifyAdmin} = require('../../Middleware/AdminAuth')
 const Route = express.Router();
-const { ViewClient, AddNewClient, UpdateClient, DeleteClient } = require('../../Controllers/Clients');
+const { ViewClient, AddNewClient, UpdateClient, DeleteClient, ViewSingleClient } = require('../../Controllers/Clients');
 const multer = require("multer")
 const path = require('path');
 const { UploadImage } = require('../../Controllers/Post');
@@ -49,7 +49,7 @@ const upload = multer({ storage: storage })
 
 Route.get("/",ViewClient)
 Route.post("/",[upload.single("fImage")],AddNewClient);
-
+Route.get("/:id",ViewSingleClient)
 Route.patch("/:id",[VerifyAdmin,upload.single("fImage")],UpdateClient)
 Route.delete("/:id",DeleteClient)
 Route.post("/contentimage",[VerifyAdmin,upload.single("fImage")],UploadImage)
