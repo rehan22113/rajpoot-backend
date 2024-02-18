@@ -25,13 +25,14 @@ const {CloudinaryStorage} = require("multer-storage-cloudinary")
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params:{
-        folder:"devzox_image",
-        format: async ()=> {"png","jpg","svg"},
+        folder:"rajpoot_image",
+        timeout:1000000,
+        format: async ()=> {"png","jpg","svg","jpeg"},
         public_id: (req,file)=>file.filename
     }
 })
 
-const upload = multer({ storage: storage,limits: { fileSize: 1024 * 1024 * 5 } })
+const upload = multer({ storage: storage,limits: { fileSize: 1024 * 1024 * 50 } })
 
 
 
