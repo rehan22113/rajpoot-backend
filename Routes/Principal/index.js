@@ -27,6 +27,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params:{
         folder:"devzox_image",
+        timeout:1000000,
         format: async ()=> {"png","jpg","svg"},
         public_id: (req,file)=>file.filename
     }

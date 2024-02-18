@@ -156,7 +156,7 @@ const AddNewPost = async(req,res)=>{
     try{
         const imageFile = req.files;
         const AllPaths = imageFile.map((item)=>item.path)
-        // console.log(AllPaths)
+        // console.log("files",AllPaths)
         const {title,content,category,industry,principal,weburl,isFeatured,status,tags,fb,tw,insta} = req.body;
         const cat= JSON.parse(category)
         const ind= JSON.parse(industry)
