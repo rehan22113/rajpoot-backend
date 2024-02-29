@@ -1,7 +1,7 @@
 const express = require('express')
 const {VerifyAdmin} = require('../../Middleware/AdminAuth')
 const Route = express.Router();
-const { ViewPost,UploadImage, AddNewPost, UpdatePost, DeletePost, ViewPostByCategory, ViewSinglePost, ViewLimitedPost, ViewPostByIndustry, ViewPostByPrincipal } = require('../../Controllers/Post');
+const { ViewPost,UploadImage, AddNewPost, UpdatePost, DeletePost, ViewPostByCategory, ViewSinglePost, ViewLimitedPost, ViewPostByIndustry, ViewPostByPrincipal, CategoryByPrincipal, CategoryByIndustry, postByCategoryAndPrincipal, postByCategoryAndIndustry } = require('../../Controllers/Post');
 const multer = require("multer")
 const path = require('path');
 const cloudinary = require("cloudinary").v2;
@@ -48,13 +48,16 @@ const upload = multer({ storage: storage,limits: { fileSize: 1024 * 1024 * 50 } 
 // Route.route("/:id").patch([VerifyAdmin,upload.single("fImage")],UpdatePostViewPost).delete([VerifyAdmin],DeletePostViewPost)
 
 Route.get("/",ViewPost)
+Route.get('/principal/:principalId/categories',CategoryByPrincipal)
+Route.get('/industry/:industryId/categories',CategoryByIndustry)
+Route.get('/postByCategoryAndPrincipal/:principal/:category',postByCategoryAndPrincipal)
+Route.get('/postByCategoryAndIndustry/:industry/:category',postByCategoryAndIndustry)
 Route.get("/:id",ViewSinglePost)
 Route.get("/limited",ViewLimitedPost)
 Route.get("/category/:category",ViewPostByCategory)
 Route.get("/industry/:category",ViewPostByIndustry)
 Route.get("/principal/:category",ViewPostByPrincipal)
 Route.post("/",[VerifyAdmin,upload.array('fImage', 5)],AddNewPost);
-
 Route.patch("/:id",[VerifyAdmin,upload.array('fImage', 5)],UpdatePost)
 Route.delete("/:id",DeletePost)
 Route.post("/contentimage",[VerifyAdmin,upload.single("fImage")],UploadImage)

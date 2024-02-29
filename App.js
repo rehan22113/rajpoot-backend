@@ -56,13 +56,13 @@ app.use('/', express.static(path.join(__dirname, 'Public')))
 // app.use(express.json())
 // app.use(cors(corsOptions));
 
-app.use(cors({origin: ["http://localhost:5173","https://rajpoot-link.vercel.app"],credentials: true }))
+app.use(cors({origin: ["http://localhost:5173","http://127.0.0.1:5500","https://rajpoot-link.vercel.app"],credentials: true }))
 // app.options("", cors(corsConfig))
 
 app.use(cookieParser());
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true,limit: '20mb' }));
-app.use(bodyParser.json({ limit: '20mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true,limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
 // app.use(helmet());
 
           

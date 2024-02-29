@@ -1,7 +1,62 @@
 const multer = require('multer');
-const PostModel = require('../models/post')
+const PostModel = require('../models/post');
+const CategoryModel = require('../models/category');
 
 
+const CategoryByPrincipal = async (req, res) => {
+    const principalId = req.params.principalId;
+  
+    try {
+      const Posts = await PostModel.find({ principal: principalId })
+      const categoryIds = Posts.map(product => product.category);
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
+  
+      res.json({msg:"OK",data:categories,error:false});
+    } catch (error) {
+        console.log(error)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+const CategoryByIndustry = async (req, res) => {
+    const industryId = req.params.industryId;
+  
+    try {
+      const Posts = await PostModel.find({ industry: industryId })
+      const categoryIds = Posts.map(product => product.category);
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds } });
+  
+      res.json({msg:"OK",data:categories,error:false});
+    } catch (error) {
+        console.log(error)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+const postByCategoryAndPrincipal = async( req,res)=>{
+    const {category,principal} = req.params;
+    // console.log(category,principal)
+    try {
+      const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
+  
+      res.json({msg:"OK",data:Posts,error:false});
+    } catch (error) {
+        console.log(error)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+const postByCategoryAndIndustry = async( req,res)=>{
+    const {category,industry} = req.params;
+    // console.log(category,principal)
+    try {
+      const Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
+  
+      res.json({msg:"OK",data:Posts,error:false});
+    } catch (error) {
+        console.log(error)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
 
 const ViewPost = async(req,res)=>{
     
@@ -274,4 +329,4 @@ const UploadImage=async(req,res)=>{
 }
 
 
-module.exports={ViewPost,ViewSinglePost,ViewLimitedPost,ViewPostByCategory, ViewPostByIndustry,ViewPostByPrincipal,AddNewPost,DeletePost,UpdatePost,UploadImage}
+module.exports={ CategoryByPrincipal,CategoryByIndustry, postByCategoryAndPrincipal, postByCategoryAndIndustry,ViewPost,ViewSinglePost,ViewLimitedPost,ViewPostByCategory, ViewPostByIndustry,ViewPostByPrincipal,AddNewPost,DeletePost,UpdatePost,UploadImage}
