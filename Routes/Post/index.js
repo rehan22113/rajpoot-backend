@@ -57,8 +57,8 @@ Route.get("/limited",ViewLimitedPost)
 Route.get("/category/:category",ViewPostByCategory)
 Route.get("/industry/:category",ViewPostByIndustry)
 Route.get("/principal/:category",ViewPostByPrincipal)
-Route.post("/",[VerifyAdmin,upload.array('fImage', 5)],AddNewPost);
-Route.patch("/:id",[VerifyAdmin,upload.array('fImage', 5)],UpdatePost)
+Route.post("/",[VerifyAdmin,upload.array('fImage', 10)],AddNewPost);
+Route.patch("/:id",[VerifyAdmin,upload.array('fImage', 10)],UpdatePost)
 Route.delete("/:id",DeletePost)
 Route.post("/contentimage",[VerifyAdmin,upload.single("fImage")],UploadImage)
 

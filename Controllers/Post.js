@@ -146,7 +146,7 @@ const ViewLimitedPost= async(req,res)=>{
     
     try{
         const limit= req.query["limit"]
-        const response = await PostModel.find({status:true}).populate("category").populate("industry").populate("principal").limit(limit)
+        const response = await PostModel.find({status:true,isFeatured:true}).populate("category").populate("industry").populate("principal").limit(limit)
         if(response)
         res.status(200).json({msg:"limited Post Sent",data:response})
         else
