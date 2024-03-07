@@ -4,13 +4,13 @@ const CategoryModel = require('../models/category');
 
 
 const CategoryByPrincipal = async (req, res) => {
-    const principalId = req.params.principalId;
-  
+
     try {
+
+      const principalId = req.params.principalId;
       const Posts = await PostModel.find({ principal: principalId })
       const categoryIds = Posts.map(product => product.category);
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
-  
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] } })
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
         console.log(error)
@@ -24,7 +24,7 @@ const CategoryByIndustry = async (req, res) => {
     try {
       const Posts = await PostModel.find({ industry: industryId })
       const categoryIds = Posts.map(product => product.category);
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds } });
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] } });
   
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
@@ -35,7 +35,7 @@ const CategoryByIndustry = async (req, res) => {
 
 const postByCategoryAndPrincipal = async( req,res)=>{
     const {category,principal} = req.params;
-    // console.log(category,principal)
+    console.log(category,principal)
     try {
       const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
   
