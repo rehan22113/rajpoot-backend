@@ -10,7 +10,7 @@ const CategoryByPrincipal = async (req, res) => {
       const principalId = req.params.principalId;
       const Posts = await PostModel.find({ principal: principalId })
       const categoryIds = Posts.map(product => product.category);
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] } })
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null })
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
         console.log(error)
@@ -24,7 +24,7 @@ const CategoryByIndustry = async (req, res) => {
     try {
       const Posts = await PostModel.find({ industry: industryId })
       const categoryIds = Posts.map(product => product.category);
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] } });
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
   
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
@@ -163,11 +163,18 @@ const ViewPostByCategory = async(req,res)=>{
     try{
         const category= req.params["category"]
         const response = await PostModel.find({category}).populate("category").populate("industry").populate("principal")
-        if(response)
-        res.status(200).json({msg:"Category Data Sent",data:response})
-        else
-        res.status(404).json({msg:"Category data not found"})
-        
+        // console.log("cat data there",response)
+        if(response){
+            const categoryData = await CategoryModel.find({parent:category})
+            if(!categoryData.length>0){
+                res.status(200).json({msg:"post",data:response})
+            }else{
+                res.status(200).json({msg:"category",data:categoryData})
+            }
+        }
+        else{
+            res.status(404).json({msg:"Category data not found"})
+        }
     }catch(err){
         console.log("View Post issue",err)
         res.status(500).json({msg:'Got error to find Post by Category'})
