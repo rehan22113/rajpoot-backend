@@ -1,4 +1,4 @@
-const multer = require('multer');
+// const multer = require('multer');
 const PostModel = require('../models/post');
 const CategoryModel = require('../models/category');
 
@@ -35,11 +35,19 @@ const CategoryByIndustry = async (req, res) => {
 
 const postByCategoryAndPrincipal = async( req,res)=>{
     const {category,principal} = req.params;
-    console.log(category,principal)
+    // console.log(category,principal)
+
     try {
-      const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
-  
-      res.json({msg:"OK",data:Posts,error:false});
+        const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
+        if(Posts){
+            const categoryData = await CategoryModel.find({parent:category})
+            if(!categoryData.length>0){
+                res.status(200).json({msg:"post",data:Posts})
+            }else{
+                res.status(200).json({msg:"category",data:categoryData})
+            }
+        }
+    
     } catch (error) {
         console.log(error)
       res.status(500).json({ error: 'Internal Server Error' });
@@ -50,8 +58,15 @@ const postByCategoryAndIndustry = async( req,res)=>{
     // console.log(category,principal)
     try {
       const Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
+      if(Posts){
+        const categoryData = await CategoryModel.find({parent:category})
+        if(!categoryData.length>0){
+            res.status(200).json({msg:"post",data:Posts})
+        }else{
+            res.status(200).json({msg:"category",data:categoryData})
+        }
+    }
   
-      res.json({msg:"OK",data:Posts,error:false});
     } catch (error) {
         console.log(error)
       res.status(500).json({ error: 'Internal Server Error' });
