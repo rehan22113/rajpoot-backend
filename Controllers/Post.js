@@ -11,8 +11,10 @@ const CategoryByPrincipal = async (req, res) => {
       const Posts = await PostModel.find({ principal: principalId })
     //   const categoryIds = Posts.map(product => product.category);
     const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-    //   console.log(categoryIds)
+    //     const postNumber = PostModel.find({ category: { $in: categoryIds }}).count()
+    //   console.log(postNumber)
       const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
+   
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
         console.log(error)
@@ -41,17 +43,41 @@ const CategoryByIndustry = async (req, res) => {
 
 const postByCategoryAndPrincipal = async( req,res)=>{
     const {category,principal} = req.params;
-    // console.log(category,principal)
+    const {pName} = req.query
+    // console.log(pName)
 
     try {
         const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
         if(Posts){
-            const categoryData = await CategoryModel.find({parent:category})
-            console.log("data for category",categoryData)
-            if(!categoryData.length>0){
+            const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:{$ne:null}})
+            // const categories = await CategoryModel.aggregate([
+            //     {
+            //         $match: {
+            //             parent: {$in:categoryIds}
+            //         }
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: "posts", // Assuming your posts collection is named "posts"
+            //             localField: "_id",
+            //             foreignField: "category",
+            //             as: "categoryProducts"
+            //         }
+            //     },
+            //     {
+            //         $match: {
+            //             "categoryProducts": { $exists: true, $not: { $size: 0 } }
+            //         }
+            //     }
+            // ]);
+            
+            // console.log("data for category",categories)
+
+            if(!categories.length>0 || pName!=undefined){
                 res.status(200).json({msg:"post",data:Posts})
             }else{
-                res.status(200).json({msg:"category",data:categoryData})
+                res.status(200).json({msg:"category",data:categories})
             }
         }
     
@@ -62,15 +88,19 @@ const postByCategoryAndPrincipal = async( req,res)=>{
 }
 const postByCategoryAndIndustry = async( req,res)=>{
     const {category,industry} = req.params;
+    const {iName} = req.query
+
     // console.log(category,principal)
     try {
       const Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
       if(Posts){
-        const categoryData = await CategoryModel.find({parent:category})
-        if(!categoryData.length>0){
+        // const categoryData = await CategoryModel.find({parent:category})
+        const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:{$ne:null}})
+        if(!categories.length>0 || iName!=undefined){
             res.status(200).json({msg:"post",data:Posts})
         }else{
-            res.status(200).json({msg:"category",data:categoryData})
+            res.status(200).json({msg:"category",data:categories})
         }
     }
   
