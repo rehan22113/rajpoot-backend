@@ -56,7 +56,7 @@ app.use('/', express.static(path.join(__dirname, 'Public')))
 // app.use(express.json())
 // app.use(cors(corsOptions));
 
-app.use(cors({origin: ["http://localhost:5173","http://127.0.0.1:5500","https://rajpoot-link.vercel.app"],credentials: true }))
+app.use(cors({origin: ["http://localhost:5173","http://127.0.0.1:5500","https://rajpoot-link.vercel.app","https://www.rajpootlinks.com","https://rajpootlinks.com"],credentials: true }))
 // app.options("", cors(corsConfig))
 
 app.use(cookieParser());
