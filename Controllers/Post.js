@@ -15,7 +15,7 @@ const CategoryByPrincipal = async (req, res) => {
     //   console.log(postNumber)
       const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
    
-      res.json({msg:"OK",data:categories,error:false});
+      res.json({msg:"OK",data:categories.reverse(),error:false});
     } catch (error) {
         console.log(error)
       res.status(500).json({ error: 'Internal Server Error' });
@@ -34,7 +34,7 @@ const CategoryByIndustry = async (req, res) => {
     const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
 
   
-      res.json({msg:"OK",data:categories,error:false});
+      res.json({msg:"OK",data:categories.reverse(),error:false});
     } catch (error) {
         console.log(error)
       res.status(500).json({ error: 'Internal Server Error' });
@@ -75,9 +75,9 @@ const postByCategoryAndPrincipal = async( req,res)=>{
             // console.log("data for category",categories)
 
             if(!categories.length>0 || pName!=undefined){
-                res.status(200).json({msg:"post",data:Posts})
+                res.status(200).json({msg:"post",data:Posts.reverse()})
             }else{
-                res.status(200).json({msg:"category",data:categories})
+                res.status(200).json({msg:"category",data:categories.reverse()})
             }
         }
     
@@ -98,9 +98,9 @@ const postByCategoryAndIndustry = async( req,res)=>{
         const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
             const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:{$ne:null}})
         if(!categories.length>0 || iName!=undefined){
-            res.status(200).json({msg:"post",data:Posts})
+            res.status(200).json({msg:"post",data:Posts.reverse()})
         }else{
-            res.status(200).json({msg:"category",data:categories})
+            res.status(200).json({msg:"category",data:categories.reverse()})
         }
     }
   
@@ -167,7 +167,7 @@ const ViewPost = async(req,res)=>{
           response = await PostModel.find().populate("category").populate("industry").populate("principal")
         }
         if(response)
-        res.status(200).json({msg:"Data Sent",data:response})
+        res.status(200).json({msg:"Data Sent",data:response.reverse()})
         else
         res.status(404).json({msg:"data not found"})
         
@@ -200,7 +200,7 @@ const ViewLimitedPost= async(req,res)=>{
         const limit= req.query["limit"]
         const response = await PostModel.find({status:true,isFeatured:true}).populate("category").populate("industry").populate("principal").limit(limit)
         if(response)
-        res.status(200).json({msg:"limited Post Sent",data:response})
+        res.status(200).json({msg:"limited Post Sent",data:response.reverse()})
         else
         res.status(404).json({msg:"limited Post not found"})
         
@@ -219,9 +219,9 @@ const ViewPostByCategory = async(req,res)=>{
         if(response){
             const categoryData = await CategoryModel.find({parent:category})
             if(!categoryData.length>0){
-                res.status(200).json({msg:"post",data:response})
+                res.status(200).json({msg:"post",data:response.reverse()})
             }else{
-                res.status(200).json({msg:"category",data:categoryData})
+                res.status(200).json({msg:"category",data:categoryData.reverse()})
             }
         }
         else{
@@ -239,7 +239,7 @@ const ViewPostByIndustry = async(req,res)=>{
         const industry= req.params["category"]
         const response = await PostModel.find({industry}).populate("category").populate("industry").populate("principal")
         if(response)
-        res.status(200).json({msg:"Industry Data Sent",data:response})
+        res.status(200).json({msg:"Industry Data Sent",data:response.reverse()})
         else
         res.status(404).json({msg:"Industry data not found"})
         
@@ -255,7 +255,7 @@ const ViewPostByPrincipal = async(req,res)=>{
         const principal= req.params["category"]
         const response = await PostModel.find({principal}).populate("category").populate("industry").populate("principal")
         if(response)
-        res.status(200).json({msg:"Principal Data Sent",data:response})
+        res.status(200).json({msg:"Principal Data Sent",data:response.reverse()})
         else
         res.status(404).json({msg:"Principal data not found"})
         
