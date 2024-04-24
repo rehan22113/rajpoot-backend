@@ -50,7 +50,7 @@ const postByCategoryAndPrincipal = async( req,res)=>{
         const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
         if(Posts){
             const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:{$ne:null}})
+            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:category})
             // const categories = await CategoryModel.aggregate([
             //     {
             //         $match: {
@@ -96,7 +96,7 @@ const postByCategoryAndIndustry = async( req,res)=>{
       if(Posts){
         // const categoryData = await CategoryModel.find({parent:category})
         const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:{$ne:null}})
+            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:category})
         if(!categories.length>0 || iName!=undefined){
             res.status(200).json({msg:"post",data:Posts})
         }else{
