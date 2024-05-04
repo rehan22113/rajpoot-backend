@@ -14,7 +14,7 @@ const CategoryByPrincipal = async (req, res) => {
     //     const postNumber = PostModel.find({ category: { $in: categoryIds }}).count()
     //   console.log(postNumber)
       const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
-   
+
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
         console.log(error)
@@ -50,7 +50,10 @@ const postByCategoryAndPrincipal = async( req,res)=>{
         const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
         if(Posts){
             const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:category})
+            const catID = categoryIds.map(item=>item._id)
+
+            // console.log("check from backend",categoryIds)
+            const categories = await CategoryModel.find({_id:{$in:catID},parent:category})
             // const categories = await CategoryModel.aggregate([
             //     {
             //         $match: {
@@ -71,14 +74,18 @@ const postByCategoryAndPrincipal = async( req,res)=>{
             //         }
             //     }
             // ]);
+            // console.log("check from check",categories)
             
             // console.log("data for category",categories)
 
-            if(!categories.length>0 || pName!=undefined){
+            if(!categories.length>0){
                 res.status(200).json({msg:"post",data:Posts})
             }else{
                 res.status(200).json({msg:"category",data:categories})
             }
+        }
+        else{
+            res.status(404).json({msg:"Category data not found"})
         }
     
     } catch (error) {
@@ -97,7 +104,7 @@ const postByCategoryAndIndustry = async( req,res)=>{
         // const categoryData = await CategoryModel.find({parent:category})
         const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
             const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:category})
-        if(!categories.length>0 || iName!=undefined){
+        if(!categories.length>0){
             res.status(200).json({msg:"post",data:Posts})
         }else{
             res.status(200).json({msg:"category",data:categories})
@@ -254,7 +261,7 @@ const ViewPostByPrincipal = async(req,res)=>{
     try{
         const principal= req.params["category"]
         const response = await PostModel.find({principal}).populate("category").populate("industry").populate("principal")
-        if(response)
+        if(response.length>0)
         res.status(200).json({msg:"Principal Data Sent",data:response})
         else
         res.status(404).json({msg:"Principal data not found"})
