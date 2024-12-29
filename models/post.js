@@ -4,6 +4,14 @@ const mongoose=require("mongoose")
 //     type: mongoose.Types.ObjectId,
 //     require:false,
 // },
+
+const createSlug = (name) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, ''); 
+  };
+
 const PostSchema=mongoose.Schema({
     category:[{
         type: mongoose.Schema.Types.ObjectId,
@@ -26,6 +34,11 @@ const PostSchema=mongoose.Schema({
     title:{
         type:String,
         required:true
+    },
+    url:{
+        type:String,
+        required:true,
+        uniqued:true
     },
     content:{
         type:String,
@@ -62,6 +75,13 @@ const PostSchema=mongoose.Schema({
 
 
 })
+
+PostSchema.pre('save', function (next) {
+    if (this.isModified('title')) {
+      this.url = createSlug(this.title);
+    }
+    next();
+  });
 
 const PostModel=mongoose.model("Post",PostSchema)
 
