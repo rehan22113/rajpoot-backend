@@ -13,7 +13,9 @@ const CategoryByPrincipal = async (req, res) => {
     const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
     //     const postNumber = PostModel.find({ category: { $in: categoryIds }}).count()
     //   console.log(postNumber)
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
+
+    
 
       res.json({msg:"OK",data:categories,error:false});
     } catch (error) {
@@ -31,7 +33,7 @@ const CategoryByIndustry = async (req, res) => {
     //   const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
     const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
 
-    const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
+    const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
 
   
       res.json({msg:"OK",data:categories,error:false});
@@ -187,8 +189,8 @@ const ViewPost = async(req,res)=>{
 const ViewSinglePost = async(req,res)=>{
     
     try{
-         const id = req.params["id"]
-         const response = await PostModel.findOne({_id:id}).populate("category").populate("industry").populate("principal")
+         const url = req.params["id"]
+         const response = await PostModel.findOne({url:url}).populate("category").populate("industry").populate("principal")
         
         if(response)
         res.status(200).json({msg:"Data Sent",data:response})
