@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+const createSlug = (name) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, ''); 
+  };
+
 const CategoriesSchema = mongoose.Schema({
     image:{
         type:String,
@@ -18,8 +25,20 @@ const CategoriesSchema = mongoose.Schema({
     featured:{
         type:Boolean,
         default:false
+    },
+    url:{
+        type:String,
+        required:true,
+        uniqued:true
     }
 })
+
+CategoriesSchema.pre('save', function (next) {
+    if (this.isModified('name')) {
+      this.url = createSlug(this.name);
+    }
+    next();
+  });
 
 const CategoryModel=mongoose.model("categorie",CategoriesSchema)
 

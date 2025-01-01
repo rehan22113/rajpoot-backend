@@ -2,28 +2,68 @@
 const PostModel = require('../models/post');
 const CategoryModel = require('../models/category');
 
+// const CategoryByPrincipal = async (req, res) => {
 
-const CategoryByPrincipal = async (req, res) => {
+//     try {
 
-    try {
-
-      const principalId = req.params.principalId;
-      const Posts = await PostModel.find({ principal: principalId })
-    //   const categoryIds = Posts.map(product => product.category);
-    const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-    //     const postNumber = PostModel.find({ category: { $in: categoryIds }}).count()
-    //   console.log(postNumber)
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
+//       const principalId = req.params.principalId;
+//       const Posts = await PostModel.find({ principal: principalId })
+//     //   const categoryIds = Posts.map(product => product.category);
+//     const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+//     //     const postNumber = PostModel.find({ category: { $in: categoryIds }}).count()
+//     //   console.log(postNumber)
+//       const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
 
     
 
-      res.json({msg:"OK",data:categories,error:false});
-    } catch (error) {
-        console.log(error)
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-}
+//       res.json({msg:"OK",data:categories,error:false});
+//     } catch (error) {
+//         console.log(error)
+//       res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// }
 
+const CategoryByPrincipal = async (req, res) => {
+    try {
+      const principalId = req.params.principalId;
+  
+      // Fetch posts for the given principalId
+      const Posts = await PostModel.find({ principal: principalId });
+  
+      // Extract unique category IDs from the posts
+      const categoryIds = Array.from(new Set(Posts.flatMap(post => post.category)));
+  
+      // Fetch categories for these IDs
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds } });
+  
+      // Helper function to find the top-level parent recursively
+      const findTopParent = async (category) => {
+        if (!category.parent) {
+          return category; // Return the category if it has no parent (it's the top-level category)
+        }
+        const parentCategory = await CategoryModel.findById(category.parent);
+        return findTopParent(parentCategory); // Recursively find the top-level parent
+      };
+  
+      // Resolve the top-level categories
+      const topLevelCategories = [];
+      for (const category of categories) {
+        const topCategory = await findTopParent(category);
+        topLevelCategories.push(topCategory);
+      }
+  
+      // Remove duplicates (in case multiple child categories map to the same top-level category)
+      const uniqueTopLevelCategories = Array.from(
+        new Map(topLevelCategories.map(cat => [cat._id.toString(), cat])).values()
+      );
+  
+      res.json({ msg: "OK", data: uniqueTopLevelCategories, error: false });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
+  
 const CategoryByIndustry = async (req, res) => {
     const industryId = req.params.industryId;
   
@@ -35,87 +75,182 @@ const CategoryByIndustry = async (req, res) => {
 
     const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
 
+    // Helper function to find the top-level parent recursively
+    const findTopParent = async (category) => {
+        if (!category.parent) {
+          return category; // Return the category if it has no parent (it's the top-level category)
+        }
+        const parentCategory = await CategoryModel.findById(category.parent);
+        return findTopParent(parentCategory); // Recursively find the top-level parent
+      };
   
-      res.json({msg:"OK",data:categories,error:false});
+      // Resolve the top-level categories
+      const topLevelCategories = [];
+      for (const category of categories) {
+        const topCategory = await findTopParent(category);
+        topLevelCategories.push(topCategory);
+      }
+  
+      // Remove duplicates (in case multiple child categories map to the same top-level category)
+      const uniqueTopLevelCategories = Array.from(
+        new Map(topLevelCategories.map(cat => [cat._id.toString(), cat])).values()
+      );
+
+  
+      res.json({msg:"OK",data:uniqueTopLevelCategories,error:false});
     } catch (error) {
         console.log(error)
       res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+// const postByCategoryAndPrincipal = async( req,res)=>{
+//     const {category,principal} = req.params;
+//     console.log("category======================",category,principal)
+//     const {pName} = req.query
+   
 
-const postByCategoryAndPrincipal = async( req,res)=>{
-    const {category,principal} = req.params;
-    const {pName} = req.query
-    // console.log(pName)
+//     try {
+//         let Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
+
+//         console.log("principal", Posts )
+//         // Step 2: If no posts found in the sent category, check its child categories
+//     if (!Posts.length) {
+//         // Find child categories of the sent category
+//         const childCategories = await CategoryModel.find({ parent: category });
+  
+//         // Extract child category IDs
+//         const childCategoryIds = childCategories.map((child) => child._id);
+  
+        
+//         Posts = await PostModel.find({ category: { $in: childCategoryIds }, principal })
+//           .populate("category")
+//           .populate("industry")
+//           .populate("principal");
+//       }
+  
+//       // Step 3: Respond with posts or an appropriate message
+//       if (Posts.length) {
+//         res.status(200).json({ msg: "post", data: Posts });
+//       } else {
+//         res.status(404).json({ msg: "No posts found for the given category or its children" });
+//       }
+    
+//     } catch (error) {
+//         console.log(error)
+//       res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// }
+
+const postByCategoryAndPrincipal = async (req, res) => {
+    const { category, principal } = req.params;
+  
+    try {
+      // Step 1: Find posts belonging to the sent category
+      let Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
+
+        console.log("Posts",Posts)
+        if (!Posts.length) {
+            // Find child categories of the sent category
+            const childCategories = await CategoryModel.find({ parent: category });
+        
+            // Extract child category IDs
+            const childCategoryIds = childCategories.map((child) => child._id);
+        
+            
+            Posts = await PostModel.find({ category: { $in: childCategoryIds }, principal })
+                .populate("category")
+                .populate("industry")
+                .populate("principal");
+         }
+
+      // Step 2: If posts are found, check for child categories
+      if (Posts.length > 0) {
+        // Find child categories of the given category
+        const childCategories = await CategoryModel.find({ parent: category });
+        console.log("childCategories",childCategories)
+  
+        // If child categories exist, return them
+        if (childCategories.length > 0) {
+            
+          return res.status(200).json({ msg: "category", data: childCategories });
+        }
+  
+        // If no child categories exist, return the posts
+        return res.status(200).json({ msg: "post", data: Posts });
+      }
+  
+      // Step 3: If no posts are found, return an appropriate message
+      return res.status(404).json({ msg: "No posts found for the given category or its children" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  };
+  
+// const postByCategoryAndIndustry = async( req,res)=>{
+//     const {category,industry} = req.params;
+
+//     const {iName} = req.query
+
+//     // console.log(category,principal)
+//     try {
+//         let Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
+//       if(Posts){
+//         // const categoryData = await CategoryModel.find({parent:category})
+//         const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+//             const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:category})
+//         if(!categories.length>0){
+//             res.status(200).json({msg:"post",data:Posts})
+//         }else{
+//             res.status(200).json({msg:"category",data:categories})
+//         }
+//     }
+  
+//     } catch (error) {
+//         console.log(error)
+//       res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// }
+
+const postByCategoryAndIndustry = async( req,res)=>{
+    const {category,industry} = req.params;
+
+    const {iName} = req.query
 
     try {
-        const Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
-        if(Posts){
-            const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-            const catID = categoryIds.map(item=>item._id)
+        let Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
 
-            // console.log("check from backend",categoryIds)
-            const categories = await CategoryModel.find({_id:{$in:catID},parent:category})
-            // const categories = await CategoryModel.aggregate([
-            //     {
-            //         $match: {
-            //             parent: {$in:categoryIds}
-            //         }
-            //     },
-            //     {
-            //         $lookup: {
-            //             from: "posts", // Assuming your posts collection is named "posts"
-            //             localField: "_id",
-            //             foreignField: "category",
-            //             as: "categoryProducts"
-            //         }
-            //     },
-            //     {
-            //         $match: {
-            //             "categoryProducts": { $exists: true, $not: { $size: 0 } }
-            //         }
-            //     }
-            // ]);
-            // console.log("check from check",categories)
+        if (!Posts.length) {
+            // Find child categories of the sent category
+            const childCategories = await CategoryModel.find({ parent: category });
+        
+            // Extract child category IDs
+            const childCategoryIds = childCategories.map((child) => child._id);
+        
             
-            // console.log("data for category",categories)
+            Posts = await PostModel.find({ category: { $in: childCategoryIds }, industry })
+                .populate("category")
+                .populate("industry")
+                .populate("principal");
+         }
 
-            if(!categories.length>0){
-                res.status(200).json({msg:"post",data:Posts})
-            }else{
-                res.status(200).json({msg:"category",data:categories})
-            }
+       if (Posts.length > 0) {
+        const childCategories = await CategoryModel.find({ parent: category });
+        console.log("childCategories",childCategories)
+  
+        if (childCategories.length > 0) {
+            
+          return res.status(200).json({ msg: "category", data: childCategories });
         }
-        else{
-            res.status(404).json({msg:"Category data not found"})
-        }
+  
+        return res.status(200).json({ msg: "post", data: Posts });
+      }
+  
+      return res.status(404).json({ msg: "No posts found for the given category or its children" });
     
     } catch (error) {
         console.log(error)
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-}
-const postByCategoryAndIndustry = async( req,res)=>{
-    const {category,industry} = req.params;
-    const {iName} = req.query
-
-    // console.log(category,principal)
-    try {
-      const Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
-      if(Posts){
-        // const categoryData = await CategoryModel.find({parent:category})
-        const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-            const categories = await CategoryModel.find({_id:{$in:categoryIds},parent:category})
-        if(!categories.length>0){
-            res.status(200).json({msg:"post",data:Posts})
-        }else{
-            res.status(200).json({msg:"category",data:categories})
-        }
-    }
-  
-    } catch (error) {
-        console.log(error)
-      res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
@@ -316,7 +451,6 @@ const AddNewPost = async(req,res)=>{
     }
 
 }
-
 const DeletePost=async(req,res)=>{
     try{
         const id = req.params['id'];
@@ -331,7 +465,6 @@ const DeletePost=async(req,res)=>{
         res.status(400).json({msg:"Error in Post deletion"})
     }
 }
-
 const UpdatePost=async(req,res)=>{
     try{
         const imageFile = req.files;
@@ -378,7 +511,6 @@ const UpdatePost=async(req,res)=>{
         res.status(400).json({msg:"Error in Updation"})
     } 
 }
-
 const UploadImage=async(req,res)=>{
 
     try{
