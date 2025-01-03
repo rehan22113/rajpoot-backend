@@ -1,4 +1,4 @@
-const PostModel = require('./models/post');
+const PostModel = require('./models/principal');
 const Db=require("./Database/Connection")
 
 
@@ -18,7 +18,7 @@ const createSlug = (name) => {
       const products = await PostModel.find();
   
       const bulkUpdateOps = products.map((product) => {
-        const urlSlug = createSlug(product.title);
+        const urlSlug = createSlug(product.name);
         return {
           updateOne: {
             filter: { _id: product._id },
