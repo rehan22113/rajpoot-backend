@@ -1,6 +1,8 @@
 // const multer = require('multer');
 const PostModel = require('../models/post');
 const CategoryModel = require('../models/category');
+const IndustryModel = require('../models/industry');
+const PrincipalModel = require('../models/principal');
 
 // const CategoryByPrincipal = async (req, res) => {
 
@@ -25,10 +27,13 @@ const CategoryModel = require('../models/category');
 
 const CategoryByPrincipal = async (req, res) => {
     try {
-      const principalId = req.params.principalId;
-  
+      const principalUrl = req.params.principalId;
+
+      
+      const principal = await PrincipalModel.findOne({ url: principalUrl });
+      
       // Fetch posts for the given principalId
-      const Posts = await PostModel.find({ principal: principalId });
+      const Posts = await PostModel.find({ principal: principal._id });
   
       // Extract unique category IDs from the posts
       const categoryIds = Array.from(new Set(Posts.flatMap(post => post.category)));
@@ -65,10 +70,13 @@ const CategoryByPrincipal = async (req, res) => {
   };
   
 const CategoryByIndustry = async (req, res) => {
-    const industryId = req.params.industryId;
+    const industryUrl = req.params.industryId;
   
     try {
-      const Posts = await PostModel.find({ industry: industryId })
+
+      const industry = await IndustryModel.findOne({ url: industryUrl });
+
+      const Posts = await PostModel.find({ industry: industry._id })
     //   const categoryIds = Posts.map(product => product.category);
     //   const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
     const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
@@ -142,26 +150,30 @@ const CategoryByIndustry = async (req, res) => {
 // }
 
 const postByCategoryAndPrincipal = async (req, res) => {
-    const { category, principal } = req.params;
+    const { category:categoryUrl, principal:principalUrl } = req.params;
   
     try {
-      // Step 1: Find posts belonging to the sent category
-      let Posts = await PostModel.find({category,principal}).populate("category").populate("industry").populate("principal")
 
-        console.log("Posts",Posts)
+      const category = await CategoryModel.findOne({ url: categoryUrl });
+      const principal = await PrincipalModel.findOne({ url: principalUrl });
+      // Step 1: Find posts belonging to the sent category
+      let Posts = await PostModel.find({category:category._id,principal:principal._id}).populate("category").populate("industry").populate("principal")
+
+       
         if (!Posts.length) {
             // Find child categories of the sent category
-            const childCategories = await CategoryModel.find({ parent: category });
+            const childCategories = await CategoryModel.find({ parent: category._id });
         
             // Extract child category IDs
             const childCategoryIds = childCategories.map((child) => child._id);
         
             
-            Posts = await PostModel.find({ category: { $in: childCategoryIds }, principal })
+            Posts = await PostModel.find({ category: { $in: childCategoryIds }, principal:principal._id })
                 .populate("category")
                 .populate("industry")
                 .populate("principal");
          }
+
 
       // Step 2: If posts are found, check for child categories
       if (Posts.length > 0) {
@@ -213,29 +225,33 @@ const postByCategoryAndPrincipal = async (req, res) => {
 // }
 
 const postByCategoryAndIndustry = async( req,res)=>{
-    const {category,industry} = req.params;
+    const {category:categoryUrl,industry:industryUrl} = req.params;
 
     const {iName} = req.query
 
     try {
-        let Posts = await PostModel.find({category,industry}).populate("category").populate("industry").populate("principal")
+
+        const category = await CategoryModel.findOne({ url: categoryUrl });
+        const industry = await IndustryModel.findOne({ url: industryUrl });
+
+        let Posts = await PostModel.find({category: category._id,industry: industry._id }).populate("category").populate("industry").populate("principal")
 
         if (!Posts.length) {
             // Find child categories of the sent category
-            const childCategories = await CategoryModel.find({ parent: category });
+            const childCategories = await CategoryModel.find({ parent: category._id });
         
             // Extract child category IDs
             const childCategoryIds = childCategories.map((child) => child._id);
         
             
-            Posts = await PostModel.find({ category: { $in: childCategoryIds }, industry })
+            Posts = await PostModel.find({ category: { $in: childCategoryIds }, industry:industry._id })
                 .populate("category")
                 .populate("industry")
                 .populate("principal");
          }
 
        if (Posts.length > 0) {
-        const childCategories = await CategoryModel.find({ parent: category });
+        const childCategories = await CategoryModel.find({ parent: category._id });
         console.log("childCategories",childCategories)
   
         if (childCategories.length > 0) {
@@ -357,11 +373,15 @@ const ViewLimitedPost= async(req,res)=>{
 const ViewPostByCategory = async(req,res)=>{
     
     try{
-        const category= req.params["category"]
-        const response = await PostModel.find({category}).populate("category").populate("industry").populate("principal")
+        const categoryUrl= req.params["category"]
+
+        const category = await CategoryModel.findOne({ url: categoryUrl });
+
+
+        const response = await PostModel.find({category:category._id}).populate("category").populate("industry").populate("principal")
         // console.log("cat data there",response)
         if(response){
-            const categoryData = await CategoryModel.find({parent:category})
+            const categoryData = await CategoryModel.find({parent:category._id})
             if(!categoryData.length>0){
                 res.status(200).json({msg:"post",data:response})
             }else{
@@ -380,8 +400,12 @@ const ViewPostByCategory = async(req,res)=>{
 const ViewPostByIndustry = async(req,res)=>{
     
     try{
-        const industry= req.params["category"]
-        const response = await PostModel.find({industry}).populate("category").populate("industry").populate("principal")
+        const industryUrl= req.params["category"]
+
+        const industry = await IndustryModel.findOne({ url: industryUrl });
+
+
+        const response = await PostModel.find({industry:industry._id}).populate("category").populate("industry").populate("principal")
         if(response)
         res.status(200).json({msg:"Industry Data Sent",data:response})
         else
@@ -396,8 +420,12 @@ const ViewPostByIndustry = async(req,res)=>{
 const ViewPostByPrincipal = async(req,res)=>{
     
     try{
-        const principal= req.params["category"]
-        const response = await PostModel.find({principal}).populate("category").populate("industry").populate("principal")
+        const principalUrl= req.params["category"]
+
+        const principal = await PrincipalModel.findOne({ url: principalUrl });
+
+        const response = await PostModel.find({principal:principal._id}).populate("category").populate("industry").populate("principal")
+
         if(response.length>0)
         res.status(200).json({msg:"Principal Data Sent",data:response})
         else
