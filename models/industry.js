@@ -16,15 +16,15 @@ const IndustrySchema = mongoose.Schema({
         type:String,
         required:true,
     },
+    url:{
+        type:String,
+        required:false,
+        uniqued:true
+    },
     featured:{
         type:Boolean,
         default:false
-    },
-    url:{
-        type:String,
-        required:true,
-        uniqued:true
-    },
+    }
 })
 
 IndustrySchema.pre('save', function (next) {

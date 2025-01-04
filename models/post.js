@@ -1,9 +1,5 @@
 const mongoose=require("mongoose")
 
-// categoryId:{
-//     type: mongoose.Types.ObjectId,
-//     require:false,
-// },
 
 const createSlug = (name) => {
     return name
@@ -31,14 +27,14 @@ const PostSchema=mongoose.Schema({
     }
     ],
     fImage:[String],
+    url:{
+        type:String,
+        required:false,
+        uniqued:true
+    },
     title:{
         type:String,
         required:true
-    },
-    url:{
-        type:String,
-        required:true,
-        uniqued:true
     },
     content:{
         type:String,

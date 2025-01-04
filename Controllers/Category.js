@@ -47,6 +47,7 @@ const AddNewCategories = async(req,res)=>{
             image:imageFile
         })
 
+        console.log("response",response)
         await response.save();
         res.status(201).json({msg:"Data Saved"})
 
