@@ -76,6 +76,8 @@ const CategoryByIndustry = async (req, res) => {
 
       const industry = await IndustryModel.findOne({ url: industryUrl });
 
+      console.log("industry",industry)
+
       const Posts = await PostModel.find({ industry: industry._id })
     //   const categoryIds = Posts.map(product => product.category);
     //   const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
@@ -337,6 +339,7 @@ const ViewPost = async(req,res)=>{
     }
 
 }
+
 const ViewSinglePost = async(req,res)=>{
     
     try{
@@ -404,8 +407,10 @@ const ViewPostByIndustry = async(req,res)=>{
 
         const industry = await IndustryModel.findOne({ url: industryUrl });
 
+        console.log("industry",industry)
 
         const response = await PostModel.find({industry:industry._id}).populate("category").populate("industry").populate("principal")
+
         if(response)
         res.status(200).json({msg:"Industry Data Sent",data:response})
         else
