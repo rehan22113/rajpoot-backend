@@ -25,94 +25,208 @@ const PrincipalModel = require('../models/principal');
 //     }
 // }
 
+// const CategoryByPrincipal = async (req, res) => {
+//     try {
+//       const principalUrl = req.params.principalId;
+
+      
+//       const principal = await PrincipalModel.findOne({ url: principalUrl });
+      
+//       // Fetch posts for the given principalId
+//       const Posts = await PostModel.find({ principal: principal._id });
+  
+//       // Extract unique category IDs from the posts
+//       const categoryIds = Array.from(new Set(Posts.flatMap(post => post.category)));
+  
+//       // Fetch categories for these IDs
+//       const categories = await CategoryModel.find({ _id: { $in: categoryIds } });
+  
+//       // Helper function to find the top-level parent recursively
+//       const findTopParent = async (category) => {
+//         if (!category.parent) {
+//           return category; // Return the category if it has no parent (it's the top-level category)
+//         }
+//         const parentCategory = await CategoryModel.findById(category.parent);
+//         return findTopParent(parentCategory); // Recursively find the top-level parent
+//       };
+  
+//       // Resolve the top-level categories
+//       const topLevelCategories = [];
+//       for (const category of categories) {
+//         const topCategory = await findTopParent(category);
+//         topLevelCategories.push(topCategory);
+//       }
+  
+//       // Remove duplicates (in case multiple child categories map to the same top-level category)
+//       const uniqueTopLevelCategories = Array.from(
+//         new Map(topLevelCategories.map(cat => [cat._id.toString(), cat])).values()
+//       );
+  
+//       res.json({ msg: "OK", data: uniqueTopLevelCategories, error: false });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ error: "Internal Server Error" });
+//     }
+//   };
+  
+// const CategoryByIndustry = async (req, res) => {
+//     const industryUrl = req.params.industryId;
+  
+//     try {
+
+//       const industry = await IndustryModel.findOne({ url: industryUrl });
+ 
+//       console.log("industry category by  industry",industry)
+
+//       const Posts = await PostModel.find({ industry: industry._id })
+//     //   const categoryIds = Posts.map(product => product.category);
+//     //   const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
+//     const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+
+//     const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
+
+//     // Helper function to find the top-level parent recursively
+//     const findTopParent = async (category) => {
+//         if (!category.parent) {
+//           return category; // Return the category if it has no parent (it's the top-level category)
+//         }
+//         const parentCategory = await CategoryModel.findById(category.parent);
+//         return findTopParent(parentCategory); // Recursively find the top-level parent
+//       };
+  
+//       // Resolve the top-level categories
+//       const topLevelCategories = [];
+//       for (const category of categories) {
+//         const topCategory = await findTopParent(category);
+//         topLevelCategories.push(topCategory);
+//       }
+  
+//       // Remove duplicates (in case multiple child categories map to the same top-level category)
+//       const uniqueTopLevelCategories = Array.from(
+//         new Map(topLevelCategories.map(cat => [cat._id.toString(), cat])).values()
+//       );
+
+  
+//       res.json({msg:"OK",data:uniqueTopLevelCategories,error:false});
+//     } catch (error) {
+//         console.log(error)
+//       res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// } 
+
+
 const CategoryByPrincipal = async (req, res) => {
-    try {
+  try {
       const principalUrl = req.params.principalId;
 
-      
-      const principal = await PrincipalModel.findOne({ url: principalUrl });
-      
-      // Fetch posts for the given principalId
-      const Posts = await PostModel.find({ principal: principal._id });
-  
-      // Extract unique category IDs from the posts
-      const categoryIds = Array.from(new Set(Posts.flatMap(post => post.category)));
-  
-      // Fetch categories for these IDs
-      const categories = await CategoryModel.find({ _id: { $in: categoryIds } });
-  
-      // Helper function to find the top-level parent recursively
-      const findTopParent = async (category) => {
-        if (!category.parent) {
-          return category; // Return the category if it has no parent (it's the top-level category)
-        }
-        const parentCategory = await CategoryModel.findById(category.parent);
-        return findTopParent(parentCategory); // Recursively find the top-level parent
-      };
-  
-      // Resolve the top-level categories
-      const topLevelCategories = [];
-      for (const category of categories) {
-        const topCategory = await findTopParent(category);
-        topLevelCategories.push(topCategory);
+      // Fetch principal by URL
+      const principal = await PrincipalModel.findOne({ url: principalUrl }).lean();
+      if (!principal) {
+          return res.status(404).json({ error: "Principal not found" });
       }
-  
-      // Remove duplicates (in case multiple child categories map to the same top-level category)
+
+      // Fetch unique category IDs directly from posts
+      const posts = await PostModel.find({ principal: principal._id }, 'category').lean();
+      if (!posts.length) {
+          return res.status(404).json({ error: "No posts found for the principal" });
+      }
+
+      const categoryIds = Array.from(new Set(posts.flatMap(post => post.category)));
+
+      // Fetch categories and their top-level parents in one query
+      const categories = await CategoryModel.aggregate([
+          { $match: { _id: { $in: categoryIds } } },
+          {
+              $graphLookup: {
+                  from: 'categories', // The collection to recursively search
+                  startWith: '$parent',
+                  connectFromField: 'parent',
+                  connectToField: '_id',
+                  as: 'ancestors',
+              },
+          },
+          {
+              $addFields: {
+                  topParent: {
+                      $arrayElemAt: ['$ancestors', -1], // Get the top-level parent
+                  },
+              },
+          },
+      ]);
+
+      // Extract top-level categories and remove duplicates
       const uniqueTopLevelCategories = Array.from(
-        new Map(topLevelCategories.map(cat => [cat._id.toString(), cat])).values()
+          new Map(
+              categories
+                  .filter(cat => cat.topParent) // Ensure topParent exists
+                  .map(cat => [cat.topParent._id.toString(), cat.topParent])
+          ).values()
       );
-  
+
       res.json({ msg: "OK", data: uniqueTopLevelCategories, error: false });
-    } catch (error) {
+  } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
-    }
-  };
-  
+  }
+};
+
+
 const CategoryByIndustry = async (req, res) => {
-    const industryUrl = req.params.industryId;
-  
-    try {
+  const industryUrl = req.params.industryId;
 
-      const industry = await IndustryModel.findOne({ url: industryUrl });
-
-      console.log("industry",industry)
-
-      const Posts = await PostModel.find({ industry: industry._id })
-    //   const categoryIds = Posts.map(product => product.category);
-    //   const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
-    const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
-
-    const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
-
-    // Helper function to find the top-level parent recursively
-    const findTopParent = async (category) => {
-        if (!category.parent) {
-          return category; // Return the category if it has no parent (it's the top-level category)
-        }
-        const parentCategory = await CategoryModel.findById(category.parent);
-        return findTopParent(parentCategory); // Recursively find the top-level parent
-      };
-  
-      // Resolve the top-level categories
-      const topLevelCategories = [];
-      for (const category of categories) {
-        const topCategory = await findTopParent(category);
-        topLevelCategories.push(topCategory);
+  try {
+      // Fetch industry directly by URL
+      const industry = await IndustryModel.findOne({ url: industryUrl }).lean();
+      if (!industry) {
+          return res.status(404).json({ error: 'Industry not found' });
       }
-  
-      // Remove duplicates (in case multiple child categories map to the same top-level category)
+
+      // Fetch posts related to the industry
+      const posts = await PostModel.find({ industry: industry._id }, 'category').lean();
+      if (!posts.length) {
+          return res.status(404).json({ error: 'No posts found for the industry' });
+      }
+
+      // Extract unique category IDs from posts
+      const categoryIds = Array.from(new Set(posts.flatMap(post => post.category)));
+
+      // Fetch categories and their top-level parents in one query
+      const categories = await CategoryModel.aggregate([
+          { $match: { _id: { $in: categoryIds } } },
+          {
+              $graphLookup: {
+                  from: 'categories', // Collection to perform recursive search
+                  startWith: '$parent',
+                  connectFromField: 'parent',
+                  connectToField: '_id',
+                  as: 'ancestors',
+              },
+          },
+          {
+              $addFields: {
+                  topParent: {
+                      $arrayElemAt: ['$ancestors', -1], // Get the top-level parent
+                  },
+              },
+          },
+      ]);
+
+      // Extract top-level categories and remove duplicates
       const uniqueTopLevelCategories = Array.from(
-        new Map(topLevelCategories.map(cat => [cat._id.toString(), cat])).values()
+          new Map(
+              categories
+                  .filter(cat => cat.topParent) // Ensure topParent exists
+                  .map(cat => [cat.topParent._id.toString(), cat.topParent])
+          ).values()
       );
 
-  
-      res.json({msg:"OK",data:uniqueTopLevelCategories,error:false});
-    } catch (error) {
-        console.log(error)
+      res.json({ msg: 'OK', data: uniqueTopLevelCategories, error: false });
+  } catch (error) {
+      console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
-    }
-}
+  }
+};
+
 // const postByCategoryAndPrincipal = async( req,res)=>{
 //     const {category,principal} = req.params;
 //     console.log("category======================",category,principal)
@@ -150,6 +264,8 @@ const CategoryByIndustry = async (req, res) => {
 //       res.status(500).json({ error: 'Internal Server Error' });
 //     }
 // }
+
+
 
 const postByCategoryAndPrincipal = async (req, res) => {
     const { category:categoryUrl, principal:principalUrl } = req.params;
@@ -405,11 +521,11 @@ const ViewPostByIndustry = async(req,res)=>{
     try{
         const industryUrl= req.params["category"]
 
-        const industry = await IndustryModel.findOne({ url: industryUrl });
+        // const industry = await IndustryModel.findOne({ url: industryUrl });
 
-        console.log("industry",industry)
+        // console.log("industry",industry)
 
-        const response = await PostModel.find({industry:industry._id}).populate("category").populate("industry").populate("principal")
+        const response = await PostModel.find({industry:industryUrl}).populate("category").populate("industry").populate("principal").lean()
 
         if(response)
         res.status(200).json({msg:"Industry Data Sent",data:response})
