@@ -345,15 +345,16 @@ const postByCategoryAndPrincipal = async (req, res) => {
 const postByCategoryAndIndustry = async( req,res)=>{
     const {category:categoryUrl,industry:industryUrl} = req.params;
 
+    
     const {iName} = req.query
-
+    
     try {
-
+        
         const category = await CategoryModel.findOne({ url: categoryUrl });
         const industry = await IndustryModel.findOne({ url: industryUrl });
-
+        
         let Posts = await PostModel.find({category: category._id,industry: industry._id }).populate("category").populate("industry").populate("principal")
-
+        
         if (!Posts.length) {
             // Find child categories of the sent category
             const childCategories = await CategoryModel.find({ parent: category._id });
@@ -370,16 +371,32 @@ const postByCategoryAndIndustry = async( req,res)=>{
 
        if (Posts.length > 0) {
         const childCategories = await CategoryModel.find({ parent: category._id });
+
         console.log("childCategories",childCategories)
-  
+
         if (childCategories.length > 0) {
-            
-          return res.status(200).json({ msg: "category", data: childCategories });
+            // Extract category IDs from posts that match the desired industry
+            const filteredPostCategories = new Set(
+                Posts.flatMap(post => post.category)
+            );
+    
+            // Filter child categories that exist in the post categories
+            const relevantCategories = childCategories.filter(cat => 
+                filteredPostCategories.has(cat._id.toString())
+            );
+    
+            if (relevantCategories.length > 0) {
+                return res.status(200).json({ msg: "category", data: relevantCategories });
+            }
         }
+  
+        // if (childCategories.length > 0) {
+            
+        //   return res.status(200).json({ msg: "category", data: childCategories });
+        // }
   
         return res.status(200).json({ msg: "post", data: Posts });
       }
-  
       return res.status(404).json({ msg: "No posts found for the given category or its children" });
     
     } catch (error) {
