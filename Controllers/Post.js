@@ -135,27 +135,36 @@ const CategoryByPrincipal = async (req, res) => {
 }
 
 const CategoryByIndustry = async (req, res) => {
-  const industryUrl = req.params.industryId;
+    const industryUrl = req.params.industryId;
+  
+    try {
 
-  try {
-      // Fetch industry directly by URL
-      const industry = await IndustryModel.findOne({ url: industryUrl }).lean();
-      if (!industry) {
-          return res.status(404).json({ error: 'Industry not found' });
+      const industry = await IndustryModel.findOne({ url: industryUrl });
+
+      const Posts = await PostModel.find({ industry: industry._id })
+    //   const categoryIds = Posts.map(product => product.category);
+    //   const categories = await CategoryModel.find({ _id: { $in: categoryIds[0] },parent:null });
+    const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+
+    const categories = await CategoryModel.find({ _id: { $in: categoryIds } })
+
+    // Helper function to find the top-level parent recursively
+    const findTopParent = async (category) => {
+        if (!category.parent) {
+          return category; // Return the category if it has no parent (it's the top-level category)
+        }
+        const parentCategory = await CategoryModel.findById(category.parent);
+        return findTopParent(parentCategory); // Recursively find the top-level parent
+      };
+  
+      // Resolve the top-level categories
+      const topLevelCategories = [];
+      for (const category of categories) {
+        const topCategory = await findTopParent(category);
+        topLevelCategories.push(topCategory);
       }
-
-      // Fetch posts related to the industry
-      const posts = await PostModel.find({ industry: industry._id }, 'category').lean();
-      if (!posts.length) {
-          return res.status(404).json({ error: 'No posts found for the industry' });
-      }
-
-      // Extract unique category IDs from posts
-      const categoryIds = Array.from(new Set(posts.flatMap(post => post.category)));
-
-    const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
-
-      // Extract top-level categories and remove duplicates
+  
+      // Remove duplicates (in case multiple child categories map to the same top-level category)
       const uniqueTopLevelCategories = Array.from(
           new Map(
               categories
@@ -416,7 +425,6 @@ const ViewPost = async(req,res)=>{
     }
 
 }
-
 const ViewSinglePost = async(req,res)=>{
     
     try{
@@ -484,10 +492,8 @@ const ViewPostByIndustry = async(req,res)=>{
 
         // const industry = await IndustryModel.findOne({ url: industryUrl });
 
-        // console.log("industry",industry)
 
-        const response = await PostModel.find({industry:industryUrl}).populate("category").populate("industry").populate("principal").lean()
-
+        const response = await PostModel.find({industry:industry._id}).populate("category").populate("industry").populate("principal")
         if(response)
         res.status(200).json({msg:"Industry Data Sent",data:response})
         else
