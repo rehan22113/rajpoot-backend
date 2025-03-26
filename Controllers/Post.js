@@ -116,60 +116,23 @@ const PrincipalModel = require('../models/principal');
 
 
 const CategoryByPrincipal = async (req, res) => {
-  try {
-      const principalUrl = req.params.principalId;
 
-      // Fetch principal by URL
-      const principal = await PrincipalModel.findOne({ url: principalUrl }).lean();
-      if (!principal) {
-          return res.status(404).json({ error: "Principal not found" });
-      }
+    try {
 
-      // Fetch unique category IDs directly from posts
-      const posts = await PostModel.find({ principal: principal._id }, 'category').lean();
-      if (!posts.length) {
-          return res.status(404).json({ error: "No posts found for the principal" });
-      }
+      const principalId = req.params.principalId;
+      const Posts = await PostModel.find({ principal: principalId })
+    //   const categoryIds = Posts.map(product => product.category);
+    const categoryIds = Array.from(new Set(Posts.flatMap(product => product.category)));
+    //     const postNumber = PostModel.find({ category: { $in: categoryIds }}).count()
+    //   console.log(postNumber)
+      const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
 
-      const categoryIds = Array.from(new Set(posts.flatMap(post => post.category)));
-
-      // Fetch categories and their top-level parents in one query
-      const categories = await CategoryModel.aggregate([
-          { $match: { _id: { $in: categoryIds } } },
-          {
-              $graphLookup: {
-                  from: 'categories', // The collection to recursively search
-                  startWith: '$parent',
-                  connectFromField: 'parent',
-                  connectToField: '_id',
-                  as: 'ancestors',
-              },
-          },
-          {
-              $addFields: {
-                  topParent: {
-                      $arrayElemAt: ['$ancestors', -1], // Get the top-level parent
-                  },
-              },
-          },
-      ]);
-
-      // Extract top-level categories and remove duplicates
-      const uniqueTopLevelCategories = Array.from(
-          new Map(
-              categories
-                  .filter(cat => cat.topParent) // Ensure topParent exists
-                  .map(cat => [cat.topParent._id.toString(), cat.topParent])
-          ).values()
-      );
-
-      res.json({ msg: "OK", data: uniqueTopLevelCategories, error: false });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
+      res.json({msg:"OK",data:categories,error:false});
+    } catch (error) {
+        console.log(error)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
 
 const CategoryByIndustry = async (req, res) => {
   const industryUrl = req.params.industryId;
@@ -190,26 +153,7 @@ const CategoryByIndustry = async (req, res) => {
       // Extract unique category IDs from posts
       const categoryIds = Array.from(new Set(posts.flatMap(post => post.category)));
 
-      // Fetch categories and their top-level parents in one query
-      const categories = await CategoryModel.aggregate([
-          { $match: { _id: { $in: categoryIds } } },
-          {
-              $graphLookup: {
-                  from: 'categories', // Collection to perform recursive search
-                  startWith: '$parent',
-                  connectFromField: 'parent',
-                  connectToField: '_id',
-                  as: 'ancestors',
-              },
-          },
-          {
-              $addFields: {
-                  topParent: {
-                      $arrayElemAt: ['$ancestors', -1], // Get the top-level parent
-                  },
-              },
-          },
-      ]);
+    const categories = await CategoryModel.find({ _id: { $in: categoryIds },parent:null })
 
       // Extract top-level categories and remove duplicates
       const uniqueTopLevelCategories = Array.from(
@@ -476,8 +420,8 @@ const ViewPost = async(req,res)=>{
 const ViewSinglePost = async(req,res)=>{
     
     try{
-         const url = req.params["id"]
-         const response = await PostModel.findOne({url:url}).populate("category").populate("industry").populate("principal")
+         const id = req.params["id"]
+         const response = await PostModel.findOne({_id:id}).populate("category").populate("industry").populate("principal")
         
         if(response)
         res.status(200).json({msg:"Data Sent",data:response})
